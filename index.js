@@ -7,7 +7,10 @@
 
 var path = require("path");
 var fs = require("fs");
-var crypto = require("crypto");
+var randomBytes = require('randombytes');
+//var crypto = require("crypto");
+var crypto = require('browserify-aes');
+crypto.randomBytes = randomBytes;
 var sjcl = require("sjcl");
 var uuid = require("uuid");
 var secp256k1 = require("secp256k1/elliptic");

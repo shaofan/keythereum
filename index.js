@@ -5,10 +5,7 @@
 
 "use strict";
 
-var path = require("path");
-var fs = require("fs");
 var randomBytes = require('randombytes');
-//var crypto = require("crypto");
 var crypto = require('browserify-aes');
 crypto.randomBytes = randomBytes;
 var sjcl = require("sjcl");
@@ -453,96 +450,5 @@ module.exports = {
     if (process.platform === "win32") filename = filename.split(":").join("-");
 
     return filename;
-  },
-
-  /**
-   * Export formatted JSON to keystore file.
-   * @param {Object} keyObject Keystore object.
-   * @param {string=} keystore Path to keystore folder (default: "keystore").
-   * @param {function=} cb Callback function (optional).
-   * @return {string} JSON filename (Node.js) or JSON string (browser).
-   */
-  exportToFile: function (keyObject, keystore, cb) {
-    var self = this;
-    var outfile, outpath, json;
-
-    function instructions(outpath) {
-      if (!self.constants.quiet) {
-        console.log(
-          "Saved to file:\n" + outpath + "\n"+
-          "To use with geth, copy this file to your Ethereum "+
-          "keystore folder (usually ~/.ethereum/keystore)."
-        );
-      }
-    }
-
-    keystore = keystore || "keystore";
-    outfile = this.generateKeystoreFilename(keyObject.address);
-    outpath = path.join(keystore, outfile);
-    json = JSON.stringify(keyObject);
-
-    if (this.browser) {
-      if (!isFunction(cb)) return json;
-      return cb(json);
-    }
-    if (!isFunction(cb)) {
-      fs.writeFileSync(outpath, json);
-      instructions(outpath);
-      return outpath;
-    }
-    fs.writeFile(outpath, json, function (ex) {
-      if (ex) throw ex;
-      instructions(outpath);
-      cb(outpath);
-    });
-  },
-
-  /**
-   * Import key data object from keystore JSON file.
-   * (Note: Node.js only!)
-   * @param {string} address Ethereum address to import.
-   * @param {string=} datadir Ethereum data directory (default: ~/.ethereum).
-   * @param {function=} cb Callback function (optional).
-   * @return {Object} Keystore data file's contents.
-   */
-  importFromFile: function (address, datadir, cb) {
-    var keystore, filepath;
-    address = address.replace("0x", "");
-    address = address.toLowerCase();
-
-    function findKeyfile(keystore, address, files) {
-      var i, len, filepath = null;
-      for (i = 0, len = files.length; i < len; ++i) {
-        if (files[i].indexOf(address) > -1) {
-          filepath = path.join(keystore, files[i]);
-          if (fs.lstatSync(filepath).isDirectory()) {
-            filepath = path.join(filepath, files[i]);
-          }
-          break;
-        }
-      }
-      return filepath;
-    }
-
-    if (this.browser) throw new Error("method only available in Node.js");
-    datadir = datadir || path.join(process.env.HOME, ".ethereum");
-    keystore = path.join(datadir, "keystore");
-    if (!isFunction(cb)) {
-      filepath = findKeyfile(keystore, address, fs.readdirSync(keystore));
-      if (!filepath) {
-        throw new Error("could not find key file for address " + address);
-      }
-      return JSON.parse(fs.readFileSync(filepath));
-    }
-    fs.readdir(keystore, function (ex, files) {
-      var filepath;
-      if (ex) return cb(ex);
-      filepath = findKeyfile(keystore, address, files);
-      if (!filepath) {
-        return new Error("could not find key file for address " + address);
-      }
-      return cb(JSON.parse(fs.readFileSync(filepath)));
-    });
   }
-
 };

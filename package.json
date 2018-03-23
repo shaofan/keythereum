@@ -1,6 +1,6 @@
 {
   "name": "browserify_keythereum",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A clone of keythereum to run in browser.",
   "main": "index.js",
   "directories": {
